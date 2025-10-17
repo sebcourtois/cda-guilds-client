@@ -28,6 +28,8 @@ extra["springShellVersion"] = "3.4.1"
 
 dependencies {
     implementation("org.springframework.shell:spring-shell-starter")
+    implementation("org.jline:jline-terminal-jni:3.30.4")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.projectlombok:lombok")
