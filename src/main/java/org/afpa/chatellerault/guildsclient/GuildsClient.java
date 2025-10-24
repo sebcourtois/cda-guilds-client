@@ -1,6 +1,5 @@
 package org.afpa.chatellerault.guildsclient;
 
-
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.log4j.Log4j2;
 
@@ -23,11 +22,12 @@ public class GuildsClient implements Closeable, AutoCloseable {
         this.writer = new PrintWriter(socket.getOutputStream(), true);
     }
 
-    public String sendCommand(String command, Map<String, String> kwargs) throws IOException {
+    public JsonNode sendCommand(String command, Map<String, Object> params) throws IOException {
         var jsonObjMapper = new com.fasterxml.jackson.databind.ObjectMapper();
-        kwargs.put("command", command);
-//        String request = jsonObjMapper.writeValueAsString(kwargs);
-        return  ""; //jsonObjMapper.readTree("{}");
+        var payload = Map.of("command", command, "params", params);
+        String request = jsonObjMapper.writeValueAsString(payload);
+        String response = this.sendRequest(request);
+        return jsonObjMapper.readTree(response);
     }
 
     public String sendRequest(String request) throws IOException {
