@@ -5,14 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.shell.command.annotation.Command;
+import org.springframework.shell.component.context.ComponentContext;
 import org.springframework.shell.component.flow.ComponentFlow;
-import org.springframework.shell.component.flow.ComponentFlow.ComponentFlowResult;
 import org.springframework.shell.component.flow.SelectItem;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,10 +25,32 @@ public class GuildsClientCommands {
         this.componentFlowBuilder = componentFlowBuilder;
     }
 
+    @Command(command = "list-caravans")
+    public void listCaravans() throws Exception {
+        try (
+                var guildsClient = new GuildsClient("localhost", 49394)
+        ) {
+            JsonNode response = guildsClient.sendCommand("list_caravans", Map.of());
+            System.out.println(response.toPrettyString());
+        }
+    }
+
+    @Command(command = "list-trading-posts")
+    public void listTradingPosts() throws Exception {
+        try (
+                var guildsClient = new GuildsClient("localhost", 49394)
+        ) {
+            JsonNode response = guildsClient.sendCommand("list_trading_posts", Map.of());
+            System.out.println(response.toPrettyString());
+        }
+    }
+
     @Command(command = "new-caravan")
     public void createCaravan() throws Exception {
-        try (var guildsClient = new GuildsClient("localhost", 49394)) {
-            JsonNode response = guildsClient.sendCommand("list_trading_post", Map.of());
+        try (
+                var guildsClient = new GuildsClient("localhost", 49394)
+        ) {
+            JsonNode response = guildsClient.sendCommand("list_trading_posts", Map.of());
 //            System.out.println(response.toPrettyString());
 
             ArrayNode resultNode = response.withArrayProperty("result");
@@ -55,7 +76,7 @@ public class GuildsClientCommands {
                     .withSingleItemSelector("locationSelector")
                     .name("Select starting trading post:").selectItems(tradingPostSelection)
                     .and().build();
-            var resCtx = flow.run().getContext();
+            ComponentContext<? extends ComponentContext<?>> resCtx = flow.run().getContext();
 
             String newCaravanName = resCtx.get("nameInput", String.class);
             String locationName = resCtx.get("locationSelector", String.class);
@@ -72,7 +93,7 @@ public class GuildsClientCommands {
     @Command(command = "echo")
     public void talkToServer() {
         try (
-                var guildsClient = new GuildsClient("localhost", 49394);
+                var guildsClient = new GuildsClient("localhost", 49394)
         ) {
             var stdinReader = new BufferedReader(new InputStreamReader(System.in));
             String userInput;
@@ -89,31 +110,5 @@ public class GuildsClientCommands {
             throw new RuntimeException(e);
         }
         System.out.println("bye");
-    }
-
-    @Command(command = "test-flow")
-    public void testComponentFlow() {
-        List<SelectItem> single1SelectItems = Arrays.asList(SelectItem.of("key1", "value1"),
-                SelectItem.of("key2", "value2"));
-        List<SelectItem> multi1SelectItems = Arrays.asList(SelectItem.of("key1", "value1"),
-                SelectItem.of("key2", "value2"), SelectItem.of("key3", "value3"));
-        ComponentFlow flow = componentFlowBuilder.clone().reset()
-                .withStringInput("field1").name("Field1").defaultValue("defaultField1Value")
-                .and()
-                .withStringInput("field2").name("Field2")
-                .and()
-                .withConfirmationInput("confirmation1").name("Confirmation1")
-                .and()
-                .withPathInput("path1").name("Path1")
-                .and()
-                .withSingleItemSelector("single1").name("Single1").selectItems(single1SelectItems)
-                .and()
-                .withMultiItemSelector("multi1").name("Multi1").selectItems(multi1SelectItems)
-                .and().build();
-
-        ComponentFlowResult result = flow.run();
-        Map<Object, Object> tmp = result.getContext().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        System.out.println(tmp);
     }
 }
