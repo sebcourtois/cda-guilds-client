@@ -2,10 +2,12 @@ package org.afpa.chatellerault.guildsclient;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.shell.command.annotation.CommandScan;
 import org.springframework.shell.command.annotation.EnableCommand;
 
 
-@EnableCommand(GuildsClientCommands.class)
+//@EnableCommand(GuildsClientCommands.class)
+@CommandScan
 @SpringBootApplication
 public class GuildsClientApp {
 

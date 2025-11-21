@@ -25,6 +25,37 @@ public class GuildsClientCommands {
         this.componentFlowBuilder = componentFlowBuilder;
     }
 
+    @Command(command = "send-caravan")
+    public void sendCaravan() throws Exception {
+        try (
+                var guildsClient = new GuildsClient("localhost", 49394)
+        ) {
+            JsonNode response = guildsClient.sendCommand("list_caravans", Map.of());
+//            System.out.println(response.toPrettyString());
+
+            ArrayNode resultNode = response.withArrayProperty("result");
+            List<SelectItem> caravanSelection = resultNode.valueStream()
+                    .filter(caravanNode -> caravanNode.get("destination_id").asText() == null)
+                    .map(caravanNode -> caravanNode.get("name").asText())
+                    .map(caravanName -> SelectItem.of(caravanName, caravanName))
+                    .toList();
+
+            if (caravanSelection.isEmpty()) {
+                log.info("No stationed caravans found");
+                return;
+            }
+
+            ComponentFlow flow = componentFlowBuilder.clone().reset()
+                    .withSingleItemSelector("caravanSelector")
+                    .name("Select caravan:").selectItems(caravanSelection)
+                    .and().build();
+
+            ComponentContext<? extends ComponentContext<?>> resCtx = flow.run().getContext();
+
+        }
+    }
+
+
     @Command(command = "list-caravans")
     public void listCaravans() throws Exception {
         try (
@@ -41,7 +72,7 @@ public class GuildsClientCommands {
                 var guildsClient = new GuildsClient("localhost", 49394)
         ) {
             JsonNode response = guildsClient.sendCommand("list_trading_posts", Map.of());
-            System.out.println(response.toPrettyString());
+//            System.out.println(response.toPrettyString());
         }
     }
 
@@ -52,7 +83,6 @@ public class GuildsClientCommands {
         ) {
             JsonNode response = guildsClient.sendCommand("list_trading_posts", Map.of());
 //            System.out.println(response.toPrettyString());
-
             ArrayNode resultNode = response.withArrayProperty("result");
             Map<String, String> tradingPostIdForName = resultNode.valueStream().collect(
                     Collectors.toMap(
@@ -76,6 +106,7 @@ public class GuildsClientCommands {
                     .withSingleItemSelector("locationSelector")
                     .name("Select starting trading post:").selectItems(tradingPostSelection)
                     .and().build();
+
             ComponentContext<? extends ComponentContext<?>> resCtx = flow.run().getContext();
 
             String newCaravanName = resCtx.get("nameInput", String.class);
